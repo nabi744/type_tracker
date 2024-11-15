@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeTracker</title>
+    <style>
+        .hidden { display: none; }
+    </style>
+    <script>
+        var is_logined = 0;
+        var id_real = '';
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            resetInputs();
+        }
+        function resetInputs() {
+            document.querySelectorAll('input').forEach(input => {
+                input.value = '';
+            });
+        }
+        function sendData(url, body) {
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: body
+            })
+            .then(response => response.text())
+            .then(data => handleResponse(data))
+            .catch(error => console.error("Error:", error));
+        }
+        
+        function handleResponse(data){
+            const word = data.split('/')
+            console.log(data)
+            if (word[0]=='login'){
+                if (word[1]=='success'){
+                    alert('로그인 성공!')
+                    showScreen('mainScreen')
+                    doWhenLogined()
+                } else if (word[1]=='fail'){
+                    if (word[2]=='noID'){
+                        alert('id가 존재하지 않습니다.')
+                    } else if (word[2]=='noPassword'){
+                        alert('비밀번호가 일치하지 않습니다')
+                    } else if (word [2]=='tooManyTry'){
+                        alert('너무 많이 시도했습니다. 10분 후에 다시 시도하세요.')
+                    }
+                }
+            } 
+            else if (word[0]=='signup'){
+                if (word[1]=='success'){
+                    alert('회원가입 성공!')
+                    showScreen('mainScreen')
+                    doWhenLogined()
+                } else if (word[1]=='fail'){
+                    alert('id가 중복됩니다.')
+                }
+            }
+        }
+        
+        function doWhenLogined(){
+            is_logined = 1;
+            document.getElementById("loginButton").classList.add('hidden');
+            document.getElementById("logoutButton").classList.remove('hidden');
+        }
+        function logout(){
+            is_logined = 0;
+            id_real = '';
+            document.getElementById("logoutButton").classList.add('hidden');
+            document.getElementById("loginButton").classList.remove('hidden');
+        }
+        
+        function handleInputSubmit(event) {
+            event.preventDefault();
+            const inputText = document.getElementById("inputText").value;
+            sendData("/submit", `data=${encodeURIComponent(inputText)}`);
+        }
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById("loginId").value;
+            const password = document.getElementById("loginPassword").value;
+
+            if (id.includes(" ") || password.includes(" ")) {
+                alert("ID 또는 패스워드에 띄어쓰기가 포함되어 있습니다.");
+                return;
+            }
+            id_real = id;
+            sendData("/login", `data=${(id + " " + password)}`);
+        }
+        function handleSignupSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById("signupId").value;
+            const password = document.getElementById("signupPassword").value;
+            const password2 = document.getElementById("signupPassword2").value;
+
+            if (id.includes(" ") || password.includes(" ")) {
+                alert("ID 또는 패스워드에 띄어쓰기가 포함되어 있습니다.");
+                return;
+            }
+            if (password != password2){
+                alert("비밀번호 확인 란이 다릅니다.");
+                return;
+            }
+            id_real = id;
+            sendData("/signup", `data=${(id + " " + password)}`);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="mainScreen" class="screen">
+        <h1>Welcome to TypeTracker</h1>
+        <button onclick="showScreen('inputScreen')">연습</button>
+        <button onclick="showScreen('loginScreen')" id="loginButton">로그인</button>
+        <button onclick="logout()" id="logoutButton" class="hidden">로그아웃</button>
+    </div>
+
+    <div id="inputScreen" class="screen hidden">
+        <h1>Enter Text</h1>
+        <form onsubmit="handleInputSubmit(event)">
+            <input type="text" id="inputText" required />
+            <button type="submit">Send</button>
+        </form>
+        <button onclick="showScreen('mainScreen')">뒤로가기</button>
+    </div>
+
+    <div id="loginScreen" class="screen hidden">
+        <h1>Login</h1>
+        <form onsubmit="handleLoginSubmit(event)">
+            <input type="text" id="loginId" placeholder="ID" required /><br />
+            <input type="password" id="loginPassword" placeholder="Password" required /><br />
+            <button type="submit">로그인</button>
+        </form>
+        <button onclick="showScreen('signupScreen')">회원가입</button>
+        <button onclick="showScreen('mainScreen')">뒤로가기</button>
+    </div>
+
+    <div id="signupScreen" class="screen hidden">
+        <h1>Signup</h1>
+        <form onsubmit="handleSignupSubmit(event)">
+            <input type="text" id="signupId" placeholder="ID" required /><br />
+            <input type="password" id="signupPassword" placeholder="Password" required /><br />
+            <input type="password" id="signupPassword2" placeholder="Password Check" required /><br />
+            <button type="submit">회원가입</button>
+        </form>
+        <button onclick="showScreen('loginScreen')">뒤로가기</button>
+    </div>
+</body>
+</html>
