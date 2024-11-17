@@ -6,7 +6,7 @@
 // Define constants
 #define MAX_LINE_LOGIN 256
 #define FILE_PATH_LOGIN "./data/user/login.txt"
-// #define FILE_PATH_LOGIN "/Users/seunggeon/Documents/vscode/typetracker/data/user/login.txt"
+// #define FILE_PATH_LOGIN "/Users/seunggeon/Documents/vscode/type_tracker/data/user/login.txt"
 
 // Function declarations
 char* login(const char *input);
