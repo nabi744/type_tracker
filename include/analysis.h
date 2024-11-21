@@ -29,3 +29,4 @@ double calculate_accuracy(char *text, char *input){
     }
     return (double)correct/total;
 }
+
