@@ -8,6 +8,7 @@
 typedef {
 
     test* history;
+    int num_tests;
 } user;
 
 typedef {
