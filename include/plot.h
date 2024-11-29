@@ -1,17 +1,13 @@
-//
-// Created by john on 24. 11. 21.
-//
+#ifndef PLOT_H
+#define PLOT_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "structure.h"
+#include "gnuplot_i.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
-#include "gnuplot_i.h"
-
-#ifndef TYPE_TRACKER_PLOT_H
-#define TYPE_TRACKER_PLOT_H
 
 typedef struct {
     char key;
@@ -26,7 +22,7 @@ enum plot_mode {
     frequency
 };
 
-KeyPosition key_positions[26] = {
+const KeyPosition key_positions[26] = {
     {'A', 360, 280, 122, 117},
     {'B', 870, 543, 122, 117},
     {'C', 598, 543, 122, 117},
@@ -135,38 +131,35 @@ void plot_user_history(user *analyze_user) {
         return;
     }
 
-    // Gnuplot 초기화
     gnuplot_ctrl *gp = gnuplot_init();
+    if (!gp) {
+        fprintf(stderr, "Error: Unable to initialize Gnuplot.\n");
+        return;
+    }
 
-    // 데이터 파일 생성
     FILE *data_file = fopen("../data/tmp/plot_data.txt", "w");
     if (!data_file) {
-        printf("Error: Unable to create data file.\n");
+        fprintf(stderr, "Error: Unable to create data file.\n");
         gnuplot_close(gp);
         return;
     }
 
-    // 테스트 데이터 기록
     for (int i = 0; i < num_tests; i++) {
         fprintf(data_file, "%d %f %f\n", i + 1, tests[i].accuracy_avg, tests[i].frequency_avg);
     }
     fclose(data_file);
 
-    // Gnuplot 설정
-    gnuplot_set_xlabel(gp, "Test Index");
-    gnuplot_set_ylabel(gp, "Value");
-    gnuplot_set_title(gp, "Accuracy and Frequency Averages");
-    gnuplot_cmd(gp, "set terminal png size 800,600");
-    gnuplot_cmd(gp, "set output '../res/img/user_test_graph.png' ");
+    gnuplot_cmd(gp,
+                "set terminal png size 800,600; "
+                "set output '../res/img/user_test_graph.png'; "
+                "set xlabel 'Test Index'; "
+                "set ylabel 'Value'; "
+                "set title 'Accuracy and Frequency Averages'; "
+                "plot '../data/tmp/plot_data.txt' using 1:2 with lines title 'Accuracy Avg', "
+                "'../data/tmp/plot_data.txt' using 1:3 with lines title 'Frequency Avg'");
 
-    // 데이터 플롯
-    gnuplot_cmd(gp, "plot '../data/tmp/plot_data.txt' using 1:2 with lines title 'Accuracy Avg', "
-                    "'../data/tmp/plot_data.txt' using 1:3 with lines title 'Frequency Avg'");
-
-    // Gnuplot 종료
     gnuplot_close(gp);
-
-    printf("Plot saved to '../res/img/user_test_graph.png' \n");
+    printf("Plot saved to '../res/img/user_test_graph.png'\n");
 }
 
-#endif // TYPE_TRACKER_PLOT_H
+#endif // PLOT_H
